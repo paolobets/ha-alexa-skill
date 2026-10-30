@@ -26,7 +26,7 @@ jobs:
           allow-prereleases: true
 
       - name: Install system libraries
-        run: sudo apt-get update && sudo apt-get install -y libturbojpeg
+        run: sudo apt-get update && sudo apt-get install -y libturbojpeg0
 
       - name: Install dependencies (stable)
         if: matrix.ha == 'stable'
