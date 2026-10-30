@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Alexa Bridge - Lambda that forwards Alexa Smart Home directives to Home Assistant.
+
+Parameters:
+  BaseUrl:
+    Type: String
+    Description: Public Home Assistant URL, https, no trailing slash.
+    AllowedPattern: '^https://[^/]+(/[^/]+)*$'
+    ConstraintDescription: Must start with https:// and must not end with a slash.
+  SkillId:
+    Type: String
+    Description: Skill ID of the Alexa Smart Home skill (amzn1.ask.skill.<...>).
+    AllowedPattern: '^amzn1\.ask\.skill\..+$'
+    ConstraintDescription: Must look like amzn1.ask.skill.<id>.
+
+Resources:
+  AlexaBridgeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Forwards Alexa Smart Home directives to Home Assistant
+      CodeUri: .
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.14
+      Architectures:
+        - arm64
+      Timeout: 10
+      MemorySize: 128
+      Environment:
+        Variables:
+          BASE_URL: !Ref BaseUrl
+          HA_PATH: /api/alexa_bridge/smart_home
+
+  # Smart Home skills invoke Lambda as alexa-connectedhome.amazon.com (the
+  # console's "Alexa Smart Home" trigger). The SAM AlexaSkill event would grant
+  # alexa-appkit.amazon.com (custom skills), so the permission is explicit.
+  AlexaSmartHomePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt AlexaBridgeFunction.Arn
+      Principal: alexa-connectedhome.amazon.com
+      EventSourceToken: !Ref SkillId
+
+Outputs:
+  FunctionArn:
+    Description: ARN to paste in the skill endpoint (Europe region).
+    Value: !GetAtt AlexaBridgeFunction.Arn

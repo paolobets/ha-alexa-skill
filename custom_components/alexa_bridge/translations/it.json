@@ -1,0 +1,46 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Alexa Bridge",
+        "description": "Inserisci le credenziali di Alexa Skill Messaging.",
+        "data": {
+          "client_id": "Client ID",
+          "client_secret": "Client secret",
+          "locale": "Lingua",
+          "endpoint": "Endpoint del gateway eventi"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Alexa Bridge è già configurato."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Entità condivise",
+        "description": "Scegli quali domini ed entità condividere con Alexa.",
+        "data": {
+          "domains": "Domini",
+          "include_entities": "Entità aggiuntive da includere",
+          "exclude_entities": "Entità da escludere"
+        }
+      },
+      "confirm": {
+        "title": "Conferma la selezione",
+        "description": "Con questa selezione condividerai {count} entità con Alexa. Le entità che escono saranno rimosse da Alexa."
+      }
+    }
+  },
+  "issues": {
+    "stock_alexa_configured": {
+      "title": "Integrazione Alexa di serie configurata",
+      "description": "È configurata anche l'integrazione Alexa di serie: rimuovi il blocco alexa: dal configuration.yaml per evitare risposte doppie."
+    },
+    "proactive_not_authorized": {
+      "title": "Eventi verso Alexa non autorizzati",
+      "description": "Alexa non accetta gli eventi inviati da Home Assistant: nella skill abilita 'Send Alexa Events', controlla Client ID e Client Secret di Alexa Skill Messaging inseriti nell'integrazione, poi ricollega l'account dall'app Alexa."
+    }
+  }
+}

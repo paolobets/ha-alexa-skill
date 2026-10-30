@@ -1,0 +1,61 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 5 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests (HA ${{ matrix.ha }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ha: [stable, beta]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          allow-prereleases: true
+
+      - name: Install system libraries
+        run: sudo apt-get update && sudo apt-get install -y libturbojpeg
+
+      - name: Install dependencies (stable)
+        if: matrix.ha == 'stable'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements_test.txt
+
+      - name: Install dependencies (beta)
+        if: matrix.ha == 'beta'
+        run: |
+          python -m pip install --upgrade pip
+          pip install --pre pytest-homeassistant-custom-component PyTurboJPEG
+
+      - name: Run tests
+        run: pytest -v
+
+  lambda:
+    name: Lambda tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          allow-prereleases: true
+
+      - name: Install test dependencies
+        run: python -m pip install --upgrade pip pytest pyyaml
+
+      - name: Run Lambda tests
+        run: pytest lambda/tests -v
