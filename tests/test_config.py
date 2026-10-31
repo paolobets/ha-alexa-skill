@@ -190,3 +190,10 @@ async def test_auth_methods_delegate_to_bridge_auth(hass: HomeAssistant):
         config.async_invalidate_access_token()
     do_auth.assert_awaited_once_with("code")
     invalidate.assert_called_once_with()
+
+
+def test_auth_strips_pasted_whitespace(hass: HomeAssistant):
+    # The developer console copy button adds a space: LWA then answers 401.
+    auth = BridgeAuth(hass, " client-id ", "client-secret\n")
+    assert auth.client_id == "client-id"
+    assert auth.client_secret == "client-secret"

@@ -64,7 +64,8 @@ class BridgeAuth(Auth):
 
     def __init__(self, hass: HomeAssistant, client_id: str, client_secret: str) -> None:
         """Initialize auth with the bridge's own token store."""
-        super().__init__(hass, client_id, client_secret)
+        # The developer console copy button adds a space around the values.
+        super().__init__(hass, client_id.strip(), client_secret.strip())
         self._store = Store(hass, STORAGE_VERSION, STORE_AUTH)
 
 

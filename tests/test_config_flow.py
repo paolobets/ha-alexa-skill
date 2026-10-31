@@ -5,6 +5,7 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
 
 from custom_components.alexa_bridge.const import (
     CONF_DOMAINS,
@@ -16,6 +17,7 @@ from custom_components.alexa_bridge.const import (
     DEFAULT_LOCALE,
     DOMAIN,
 )
+from custom_components.alexa_bridge.config_flow import LWA_TOKEN_URI
 
 USER_INPUT = {
     CONF_CLIENT_ID: "client-id",
@@ -25,8 +27,11 @@ USER_INPUT = {
 }
 
 
-async def test_user_flow_creates_entry_with_defaults(hass: HomeAssistant) -> None:
+async def test_user_flow_creates_entry_with_defaults(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """The user step stores credentials, locale and endpoint; options are empty."""
+    aioclient_mock.post(LWA_TOKEN_URI, json={"access_token": "tok"})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -43,8 +48,58 @@ async def test_user_flow_creates_entry_with_defaults(hass: HomeAssistant) -> Non
     assert result["options"] == {}
 
 
-async def test_single_instance(hass: HomeAssistant) -> None:
+async def test_user_flow_strips_credentials(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Spaces pasted around the credentials are neither stored nor sent to LWA."""
+    aioclient_mock.post(LWA_TOKEN_URI, json={"access_token": "tok"})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {**USER_INPUT, CONF_CLIENT_ID: " client-id ", CONF_CLIENT_SECRET: " client-secret "},
+    )
+    assert result["data"][CONF_CLIENT_ID] == "client-id"
+    assert result["data"][CONF_CLIENT_SECRET] == "client-secret"
+    sent = aioclient_mock.mock_calls[0][2]
+    assert sent["client_id"] == "client-id"
+    assert sent["client_secret"] == "client-secret"
+    assert sent["scope"] == "alexa:skill_messaging"
+
+
+async def test_user_flow_rejected_credentials_show_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Credentials refused by LWA keep the form open with invalid_auth."""
+    aioclient_mock.post(LWA_TOKEN_URI, status=401, json={"error": "invalid_client"})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT)
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+
+async def test_user_flow_lwa_unreachable_shows_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """A network failure towards LWA is reported as cannot_connect."""
+    aioclient_mock.post(LWA_TOKEN_URI, exc=TimeoutError())
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT)
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_single_instance(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """A second flow aborts as already configured."""
+    aioclient_mock.post(LWA_TOKEN_URI, json={"access_token": "tok"})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

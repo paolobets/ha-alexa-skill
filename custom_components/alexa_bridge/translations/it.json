@@ -14,6 +14,10 @@
     },
     "abort": {
       "already_configured": "Alexa Bridge è già configurato."
+    },
+    "error": {
+      "invalid_auth": "Login with Amazon ha rifiutato Client ID e Client secret. Copiali di nuovo dalla pagina Permissions della skill (Send Alexa Events), cliccando Show prima di copiare il secret, e controlla che il browser non abbia riempito da solo il campo secret.",
+      "cannot_connect": "Impossibile raggiungere Login with Amazon. Controlla la connessione e riprova."
     }
   },
   "options": {
