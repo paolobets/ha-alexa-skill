@@ -22,6 +22,8 @@ import uuid
 
 DEFAULT_HA_PATH = "/api/alexa_bridge/smart_home"
 TIMEOUT_SECONDS = 8
+# Cloudflare answers 403 to the default "Python-urllib" agent.
+USER_AGENT = "ha-alexa-bridge/0.1.1"
 
 _LOGGER = logging.getLogger()
 _LOGGER.setLevel(logging.INFO)
@@ -101,6 +103,7 @@ def lambda_handler(event, context):
         headers={
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
+            "User-Agent": USER_AGENT,
         },
         method="POST",
     )

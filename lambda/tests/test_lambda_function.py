@@ -67,6 +67,16 @@ def test_forwards_to_bridge_path_with_bearer():
     assert urlopen.call_args.kwargs.get("timeout")
 
 
+def test_sends_own_user_agent():
+    # Cloudflare blocks the default "Python-urllib" agent with HTTP 403.
+    with patch("urllib.request.urlopen", return_value=_ok_response()) as urlopen:
+        lambda_function.lambda_handler(_event(), None)
+
+    agent = urlopen.call_args.args[0].get_header("User-agent")
+    assert agent == lambda_function.USER_AGENT
+    assert not agent.startswith("Python-urllib")
+
+
 def test_token_from_grantee_for_accept_grant():
     event = _event("AcceptGrant", "Alexa.Authorization")
     del event["directive"]["endpoint"]
