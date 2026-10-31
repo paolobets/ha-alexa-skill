@@ -43,8 +43,8 @@
       "description": "The built-in Alexa integration is also configured: remove the alexa: block from configuration.yaml to avoid duplicate responses."
     },
     "proactive_not_authorized": {
-      "title": "Alexa events not authorized",
-      "description": "Alexa does not accept the events sent by Home Assistant: in the skill enable 'Send Alexa Events', check the Alexa Skill Messaging Client ID and Client Secret entered in the integration, then relink the account from the Alexa app."
+      "title": "Alexa link or events refused",
+      "description": "Login with Amazon refused Home Assistant: either linking the skill failed or Alexa rejects the events it sends. Check the Client ID and Client secret under Send Alexa Events on the skill Permissions page, re-enter them in the integration if needed, then disable and re-enable the skill in the Alexa app."
     }
   }
 }

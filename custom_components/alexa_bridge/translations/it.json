@@ -43,8 +43,8 @@
       "description": "È configurata anche l'integrazione Alexa di serie: rimuovi il blocco alexa: dal configuration.yaml per evitare risposte doppie."
     },
     "proactive_not_authorized": {
-      "title": "Eventi verso Alexa non autorizzati",
-      "description": "Alexa non accetta gli eventi inviati da Home Assistant: nella skill abilita 'Send Alexa Events', controlla Client ID e Client Secret di Alexa Skill Messaging inseriti nell'integrazione, poi ricollega l'account dall'app Alexa."
+      "title": "Collegamento o eventi Alexa rifiutati",
+      "description": "Login with Amazon ha rifiutato Home Assistant: il collegamento della skill non è riuscito oppure Alexa rifiuta gli eventi inviati. Controlla Client ID e Client secret in Send Alexa Events nella pagina Permissions della skill, reinseriscili nell'integrazione se serve, poi disabilita e riabilita la skill dall'app Alexa."
     }
   }
 }
