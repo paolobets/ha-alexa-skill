@@ -17,7 +17,7 @@ from .const import (
     CONF_DOMAINS,
     CONF_EXCLUDE_ENTITIES,
     CONF_INCLUDE_ENTITIES,
-    ECHO_PLATFORM,
+    ECHO_PLATFORMS,
 )
 
 
@@ -63,7 +63,7 @@ def is_shared(hass: HomeAssistant, entity_id: str, selection: Selection) -> bool
     if domain in BLOCKED_DOMAINS or domain not in ENTITY_ADAPTERS:
         return False
     entry = er.async_get(hass).async_get(entity_id)
-    if entry is not None and entry.platform == ECHO_PLATFORM:
+    if entry is not None and entry.platform in ECHO_PLATFORMS:
         return False
     if entity_id in selection.exclude:
         return False

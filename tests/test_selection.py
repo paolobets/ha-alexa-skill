@@ -55,9 +55,13 @@ async def test_blocked_domains_never_shared(hass: HomeAssistant):
 
 
 async def test_echo_never_shared(hass: HomeAssistant):
-    er.async_get(hass).async_get_or_create("media_player", "alexa_media", "echo1", suggested_object_id="echo")
-    hass.states.async_set("media_player.echo", "idle")
-    assert not is_shared(hass, "media_player.echo", _sel({"media_player"}, {"media_player.echo"}))
+    for platform in ("alexa_media", "alexa_devices"):
+        er.async_get(hass).async_get_or_create(
+            "media_player", platform, "echo1", suggested_object_id=f"echo_{platform}"
+        )
+        eid = f"media_player.echo_{platform}"
+        hass.states.async_set(eid, "idle")
+        assert not is_shared(hass, eid, _sel({"media_player"}, {eid}))
 
 
 async def test_hidden_and_diagnostic_excluded_unless_included(hass: HomeAssistant):

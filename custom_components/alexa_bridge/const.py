@@ -17,8 +17,9 @@ DEFAULT_ENDPOINT = "https://api.eu.amazonalexa.com/v3/events"
 BLOCKED_DOMAINS = frozenset({"automation", "alarm_control_panel"})
 # binary_sensor device classes shared at domain level.
 BINARY_SENSOR_CLASSES = frozenset({"door", "garage_door", "opening", "window", "motion"})
-# Entities registered by this platform (Echo devices) are always excluded.
-ECHO_PLATFORM = "alexa_media"
+# Entities of the Echo devices themselves are always excluded: Alexa already
+# knows them. alexa_media = Alexa Media Player (HACS), alexa_devices = built-in.
+ECHO_PLATFORMS = frozenset({"alexa_media", "alexa_devices"})
 
 STORE_CONFIG = "alexa_bridge"
 STORE_AUTH = "alexa_bridge_auth"

@@ -111,8 +111,9 @@ integrazione → Configura):
 - `binary_sensor`: anche col dominio selezionato si condividono **solo** le classi
   `door`, `garage_door`, `opening`, `window`, `motion` (le altre, compresa
   `presence`, non funzionano in it-IT o sono rumore), salvo inclusione esplicita.
-- **Esclusione fissa** degli Echo di Alexa Media Player (entità della piattaforma
-  `alexa_media`), anche se il dominio `media_player` è selezionato.
+- **Esclusione fissa** degli Echo (entità delle piattaforme `alexa_media`, Alexa
+  Media Player, e `alexa_devices`, integrazione ufficiale), anche se il dominio
+  o l'area sono selezionati.
 - Al primo avvio nessun dominio è preselezionato: non si condivide nulla finché
   Paolo non sceglie (*scelta di Claude*, per non ricreare il disordine).
 - La pagina mostra **quante entità** risultano condivise con la selezione corrente,
