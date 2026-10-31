@@ -14,6 +14,8 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    AreaSelector,
+    AreaSelectorConfig,
     EntitySelector,
     EntitySelectorConfig,
     SelectSelector,
@@ -24,6 +26,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_AREAS,
     CONF_DOMAINS,
     CONF_ENDPOINT,
     CONF_EXCLUDE_ENTITIES,
@@ -118,10 +121,11 @@ class AlexaBridgeOptionsFlow(OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Choose domains and per-entity overrides."""
+        """Choose domains, areas and per-entity overrides."""
         if user_input is not None:
             self._proposed = {
                 CONF_DOMAINS: list(user_input.get(CONF_DOMAINS, [])),
+                CONF_AREAS: list(user_input.get(CONF_AREAS, [])),
                 CONF_INCLUDE_ENTITIES: list(user_input.get(CONF_INCLUDE_ENTITIES, [])),
                 CONF_EXCLUDE_ENTITIES: list(user_input.get(CONF_EXCLUDE_ENTITIES, [])),
             }
@@ -138,6 +142,9 @@ class AlexaBridgeOptionsFlow(OptionsFlow):
                         multiple=True,
                     )
                 ),
+                vol.Optional(
+                    CONF_AREAS, default=list(current.get(CONF_AREAS, []))
+                ): AreaSelector(AreaSelectorConfig(multiple=True)),
                 vol.Optional(
                     CONF_INCLUDE_ENTITIES,
                     default=list(current.get(CONF_INCLUDE_ENTITIES, [])),

@@ -23,7 +23,11 @@ from homeassistant.components.alexa.state_report import (
     async_send_delete_message,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, EventStateChangedData, HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
@@ -40,6 +44,8 @@ ISSUE_NOT_AUTHORIZED = "proactive_not_authorized"
 _AUTH_REFUSED = frozenset({HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN})
 # Registry changes that alter the name Alexa announces.
 _NAME_CHANGES = frozenset({"name", "aliases"})
+# Registry changes that can move an entity into or out of a shared area.
+_AREA_CHANGES = frozenset({"area_id", "device_id"})
 
 type _Sender = Callable[[HomeAssistant, Any, list[str]], Awaitable[aiohttp.ClientResponse]]
 
@@ -105,6 +111,9 @@ class SyncManager:
             return
         self._unsubs.append(
             hass.bus.async_listen(er.EVENT_ENTITY_REGISTRY_UPDATED, self._async_registry_updated)
+        )
+        self._unsubs.append(
+            hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, self._async_device_updated)
         )
         await self.async_reconcile()
 
@@ -228,8 +237,20 @@ class SyncManager:
                 await self._async_add_now_or_later(entity_id)
         elif old := data.get("old_entity_id"):
             await self._async_renamed(old, entity_id)
+        elif _AREA_CHANGES & data["changes"].keys() and self.config.selection.areas:
+            await self.async_reconcile()
         elif entity_id in self._synced and _NAME_CHANGES & data["changes"].keys():
             await self._async_add_now_or_later(entity_id)
+
+    async def _async_device_updated(self, event: Event[dr.EventDeviceRegistryUpdatedData]) -> None:
+        # A device moved to or out of a shared area takes its entities along.
+        data = event.data
+        if (
+            data["action"] == "update"
+            and "area_id" in data["changes"]
+            and self.config.selection.areas
+        ):
+            await self.async_reconcile()
 
     async def _async_removed(self, entity_id: str) -> None:
         async with self._lock:

@@ -451,3 +451,49 @@ async def test_failed_registry_delete_retried_on_reconcile(
 
     assert _events(aioclient_mock, "DeleteReport") == [["ha-saved"]]
     assert hass_storage[STORE_SYNC]["data"] == {"synced": {}, "pending_delete": {}}
+
+
+async def test_entity_moved_into_shared_area_is_added(
+    hass: HomeAssistant, hass_storage, token, gateway
+) -> None:
+    from homeassistant.helpers import area_registry as ar
+
+    _authorized(hass_storage)
+    area = ar.async_get(hass).async_create("Soggiorno").id
+    id_sala = _light(hass, "sala")
+    entry = _entry(hass, domains=[], areas=[area])
+    await _setup(hass, entry)
+    assert gateway.mock_calls == []
+
+    er.async_get(hass).async_update_entity("light.sala", area_id=area)
+    await hass.async_block_till_done()
+    assert _events(gateway, "AddOrUpdateReport") == [[id_sala]]
+
+    er.async_get(hass).async_update_entity("light.sala", area_id=None)
+    await hass.async_block_till_done()
+    assert _events(gateway, "DeleteReport") == [[id_sala]]
+
+
+async def test_device_moved_into_shared_area_adds_its_entities(
+    hass: HomeAssistant, hass_storage, token, gateway
+) -> None:
+    from homeassistant.helpers import area_registry as ar, device_registry as dr
+
+    _authorized(hass_storage)
+    area = ar.async_get(hass).async_create("Cucina").id
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("test", "presa")}
+    )
+    presa = er.async_get(hass).async_get_or_create(
+        "switch", "test", "p", suggested_object_id="presa", device_id=device.id
+    )
+    hass.states.async_set("switch.presa", "off", {"friendly_name": "presa"})
+    entry = _entry(hass, domains=[], areas=[area])
+    await _setup(hass, entry)
+    assert gateway.mock_calls == []
+
+    dr.async_get(hass).async_update_device(device.id, area_id=area)
+    await hass.async_block_till_done()
+    assert _events(gateway, "AddOrUpdateReport") == [[f"ha-{presa.id}"]]

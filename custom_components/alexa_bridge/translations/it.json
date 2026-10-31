@@ -24,9 +24,10 @@
     "step": {
       "init": {
         "title": "Entità condivise",
-        "description": "Scegli quali domini ed entità condividere con Alexa.",
+        "description": "Scegli quali domini, aree ed entità condividere con Alexa. Un'area condivide tutte le entità supportate che contiene, tranne quelle escluse.",
         "data": {
           "domains": "Domini",
+          "areas": "Aree",
           "include_entities": "Entità aggiuntive da includere",
           "exclude_entities": "Entità da escludere"
         }

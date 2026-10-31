@@ -4,6 +4,7 @@ DOMAIN = "alexa_bridge"
 VIEW_URL = "/api/alexa_bridge/smart_home"
 
 CONF_DOMAINS = "domains"
+CONF_AREAS = "areas"
 CONF_INCLUDE_ENTITIES = "include_entities"
 CONF_EXCLUDE_ENTITIES = "exclude_entities"
 CONF_LOCALE = "locale"

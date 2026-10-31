@@ -159,3 +159,24 @@ async def test_options_domains_exclude_blocked(hass: HomeAssistant) -> None:
     assert "light" in options
     assert "automation" not in options
     assert "alarm_control_panel" not in options
+
+
+async def test_options_flow_saves_areas(hass: HomeAssistant) -> None:
+    """Areas chosen in the form are counted and saved."""
+    from homeassistant.helpers import area_registry as ar, entity_registry as er
+
+    area = ar.async_get(hass).async_create("Soggiorno").id
+    er.async_get(hass).async_get_or_create("switch", "test", "p", suggested_object_id="presa")
+    er.async_get(hass).async_update_entity("switch.presa", area_id=area)
+    hass.states.async_set("switch.presa", "on")
+    hass.states.async_set("switch.altrove", "on")
+    entry = await _entry(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"areas": [area]}
+    )
+    assert result["description_placeholders"]["count"] == "1"
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options["areas"] == [area]

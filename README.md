@@ -30,8 +30,10 @@ la CI la prova ogni settimana contro HA stabile e beta.
    Send Alexa Events.
 3. In HA: *Impostazioni > Dispositivi e servizi > Aggiungi integrazione > Alexa
    Bridge*, con Client ID e Client secret di Skill Messaging.
-4. *Configura* nell'integrazione: scegli domini ed entità da condividere
-   (**prima** di collegare l'account in Alexa).
+4. *Configura* nell'integrazione: scegli domini, aree ed entità da condividere
+   (**prima** di collegare l'account in Alexa). Un'area condivide tutte le
+   entità supportate che contiene (dell'entità o del suo dispositivo), tranne le
+   escluse; spostare un dispositivo dentro o fuori l'area aggiorna Alexa da sé.
 5. Collega la skill dall'app Alexa e cerca i dispositivi.
 6. [Collaudo](docs/collaudo.md): checklist di verifica dal vivo.
 

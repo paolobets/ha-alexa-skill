@@ -62,8 +62,9 @@ non vanno scritti nel repo né condivisi.
 
 ## 6. Ordine corretto
 
-1. **Prima** scegli in HA cosa condividere (*Alexa Bridge > Configura*) e
-   conferma il numero di entità.
+1. **Prima** scegli in HA cosa condividere (*Alexa Bridge > Configura*): domini
+   interi, aree intere (tutte le entità supportate dell'area, tranne le escluse)
+   o singole entità. Conferma il numero di entità.
 2. **Poi** collega la skill dall'app Alexa (abilita la skill in sviluppo, accedi
    con HA) e avvia la scoperta dei dispositivi.
 

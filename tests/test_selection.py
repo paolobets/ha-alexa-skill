@@ -12,8 +12,8 @@ from custom_components.alexa_bridge.selection import (
 )
 
 
-def _sel(domains=(), include=(), exclude=()):
-    return Selection(frozenset(domains), frozenset(include), frozenset(exclude))
+def _sel(domains=(), include=(), exclude=(), areas=()):
+    return Selection(frozenset(domains), frozenset(include), frozenset(exclude), frozenset(areas))
 
 
 def test_from_options_tolerates_missing_keys():
@@ -111,3 +111,62 @@ async def test_shared_entity_ids_counts(hass: HomeAssistant):
     for eid in ("light.a", "light.b", "light.c", "switch.x"):
         hass.states.async_set(eid, "on")
     assert shared_entity_ids(hass, _sel({"light"})) == {"light.a", "light.b"}
+
+
+def _area_setup(hass: HomeAssistant):
+    """Soggiorno: a light by entity area, a switch by device area, plus others."""
+    from homeassistant.helpers import area_registry as ar, device_registry as dr
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    soggiorno = ar.async_get(hass).async_create("Soggiorno").id
+    cucina = ar.async_get(hass).async_create("Cucina").id
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("test", "presa")}
+    )
+    dr.async_get(hass).async_update_device(device.id, area_id=soggiorno)
+    reg = er.async_get(hass)
+    reg.async_get_or_create("light", "test", "l1", suggested_object_id="divano")
+    reg.async_update_entity("light.divano", area_id=soggiorno)
+    reg.async_get_or_create("switch", "test", "s1", suggested_object_id="presa", device_id=device.id)
+    reg.async_get_or_create("light", "test", "l2", suggested_object_id="tavolo", device_id=device.id)
+    # entity area wins; HA wants an own name for an own area
+    reg.async_update_entity("light.tavolo", area_id=cucina, name="Tavolo")
+    reg.async_get_or_create("alarm_control_panel", "test", "a1", suggested_object_id="casa", device_id=device.id)
+    reg.async_get_or_create(
+        "sensor", "test", "d1", suggested_object_id="segnale", device_id=device.id,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+    for eid in ("light.divano", "switch.presa", "light.tavolo", "alarm_control_panel.casa", "sensor.segnale"):
+        hass.states.async_set(eid, "on")
+    return soggiorno, cucina
+
+
+async def test_area_shares_every_supported_entity_in_it(hass: HomeAssistant):
+    soggiorno, _ = _area_setup(hass)
+    sel = _sel(areas={soggiorno})
+    assert shared_entity_ids(hass, sel) == {"light.divano", "switch.presa"}
+
+
+async def test_area_respects_exclude(hass: HomeAssistant):
+    soggiorno, _ = _area_setup(hass)
+    sel = _sel(exclude={"switch.presa"}, areas={soggiorno})
+    assert shared_entity_ids(hass, sel) == {"light.divano"}
+
+
+async def test_entity_area_overrides_device_area(hass: HomeAssistant):
+    soggiorno, cucina = _area_setup(hass)
+    assert not is_shared(hass, "light.tavolo", _sel(areas={soggiorno}))
+    assert is_shared(hass, "light.tavolo", _sel(areas={cucina}))
+
+
+async def test_area_and_domain_add_up(hass: HomeAssistant):
+    _, cucina = _area_setup(hass)
+    hass.states.async_set("light.senza_area", "on")
+    sel = _sel({"switch"}, areas={cucina})
+    assert shared_entity_ids(hass, sel) == {"switch.presa", "light.tavolo"}
+
+
+def test_from_options_reads_areas():
+    assert Selection.from_options({"areas": ["soggiorno"]}).areas == frozenset({"soggiorno"})

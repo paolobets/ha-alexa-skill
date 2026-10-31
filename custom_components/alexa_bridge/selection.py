@@ -8,11 +8,12 @@ from typing import Any
 
 from homeassistant.components.alexa.entities import ENTITY_ADAPTERS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import (
     BINARY_SENSOR_CLASSES,
     BLOCKED_DOMAINS,
+    CONF_AREAS,
     CONF_DOMAINS,
     CONF_EXCLUDE_ENTITIES,
     CONF_INCLUDE_ENTITIES,
@@ -22,11 +23,12 @@ from .const import (
 
 @dataclass(frozen=True)
 class Selection:
-    """User choice: whole domains plus per-entity overrides."""
+    """User choice: whole domains and areas plus per-entity overrides."""
 
     domains: frozenset[str]
     include: frozenset[str]
     exclude: frozenset[str]
+    areas: frozenset[str] = frozenset()
 
     @classmethod
     def from_options(cls, options: Mapping[str, Any]) -> Selection:
@@ -35,12 +37,24 @@ class Selection:
             frozenset(options.get(CONF_DOMAINS) or ()),
             frozenset(options.get(CONF_INCLUDE_ENTITIES) or ()),
             frozenset(options.get(CONF_EXCLUDE_ENTITIES) or ()),
+            frozenset(options.get(CONF_AREAS) or ()),
         )
 
 
 def selectable_domains() -> list[str]:
     """Domains the user may pick: those Alexa supports minus blocked ones."""
     return sorted(set(ENTITY_ADAPTERS) - BLOCKED_DOMAINS)
+
+
+def entity_area(hass: HomeAssistant, entry: er.RegistryEntry | None) -> str | None:
+    """Area of the entity, else the area of its device, as Home Assistant shows it."""
+    if entry is None:
+        return None
+    if entry.area_id:
+        return entry.area_id
+    if entry.device_id and (device := dr.async_get(hass).async_get(entry.device_id)):
+        return device.area_id
+    return None
 
 
 def is_shared(hass: HomeAssistant, entity_id: str, selection: Selection) -> bool:
@@ -55,7 +69,9 @@ def is_shared(hass: HomeAssistant, entity_id: str, selection: Selection) -> bool
         return False
     if entity_id in selection.include:
         return True
-    if domain not in selection.domains:
+    if domain not in selection.domains and (
+        not selection.areas or entity_area(hass, entry) not in selection.areas
+    ):
         return False
     if entry is not None and (entry.entity_category or entry.hidden_by):
         return False
