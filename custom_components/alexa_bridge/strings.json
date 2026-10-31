@@ -24,10 +24,12 @@
     "step": {
       "init": {
         "title": "Shared entities",
-        "description": "Choose which domains, areas and entities are shared with Alexa. An area shares every supported entity in it, except the excluded ones.",
+        "description": "Choose which domains, areas and entities to share with Alexa. An area shares every supported entity it holds. Excluded domains, devices and entities always stay out; only an entity added by hand is shared anyway.",
         "data": {
           "domains": "Domains",
           "areas": "Areas",
+          "exclude_domains": "Domains to exclude",
+          "exclude_devices": "Devices to exclude",
           "include_entities": "Additional entities to include",
           "exclude_entities": "Entities to exclude"
         }

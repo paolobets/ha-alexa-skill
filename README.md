@@ -34,6 +34,9 @@ la CI la prova ogni settimana contro HA stabile e beta.
    (**prima** di collegare l'account in Alexa). Un'area condivide tutte le
    entità supportate che contiene (dell'entità o del suo dispositivo), tranne le
    escluse; spostare un dispositivo dentro o fuori l'area aggiorna Alexa da sé.
+   Domini, dispositivi ed entità da escludere restano sempre fuori (per esempio
+   `valve`, o un dispositivo che Alexa vede già dalla skill del produttore);
+   passa comunque solo un'entità aggiunta a mano.
 5. Collega la skill dall'app Alexa e cerca i dispositivi.
 6. [Collaudo](docs/collaudo.md): checklist di verifica dal vivo.
 

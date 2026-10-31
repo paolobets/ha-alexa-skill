@@ -7,6 +7,8 @@ CONF_DOMAINS = "domains"
 CONF_AREAS = "areas"
 CONF_INCLUDE_ENTITIES = "include_entities"
 CONF_EXCLUDE_ENTITIES = "exclude_entities"
+CONF_EXCLUDE_DOMAINS = "exclude_domains"
+CONF_EXCLUDE_DEVICES = "exclude_devices"
 CONF_LOCALE = "locale"
 CONF_ENDPOINT = "endpoint"
 

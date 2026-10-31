@@ -237,7 +237,10 @@ class SyncManager:
                 await self._async_add_now_or_later(entity_id)
         elif old := data.get("old_entity_id"):
             await self._async_renamed(old, entity_id)
-        elif _AREA_CHANGES & data["changes"].keys() and self.config.selection.areas:
+        elif _AREA_CHANGES & data["changes"].keys() and (
+            self.config.selection.areas or self.config.selection.exclude_devices
+        ):
+            # Moving to another device can also put the entity under an excluded one.
             await self.async_reconcile()
         elif entity_id in self._synced and _NAME_CHANGES & data["changes"].keys():
             await self._async_add_now_or_later(entity_id)

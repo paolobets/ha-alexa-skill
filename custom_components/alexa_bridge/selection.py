@@ -15,6 +15,8 @@ from .const import (
     BLOCKED_DOMAINS,
     CONF_AREAS,
     CONF_DOMAINS,
+    CONF_EXCLUDE_DEVICES,
+    CONF_EXCLUDE_DOMAINS,
     CONF_EXCLUDE_ENTITIES,
     CONF_INCLUDE_ENTITIES,
     ECHO_PLATFORMS,
@@ -23,12 +25,15 @@ from .const import (
 
 @dataclass(frozen=True)
 class Selection:
-    """User choice: whole domains and areas plus per-entity overrides."""
+    """User choice: whole domains and areas, minus excluded domains and devices,
+    plus per-entity overrides."""
 
     domains: frozenset[str]
     include: frozenset[str]
     exclude: frozenset[str]
     areas: frozenset[str] = frozenset()
+    exclude_domains: frozenset[str] = frozenset()
+    exclude_devices: frozenset[str] = frozenset()
 
     @classmethod
     def from_options(cls, options: Mapping[str, Any]) -> Selection:
@@ -38,6 +43,8 @@ class Selection:
             frozenset(options.get(CONF_INCLUDE_ENTITIES) or ()),
             frozenset(options.get(CONF_EXCLUDE_ENTITIES) or ()),
             frozenset(options.get(CONF_AREAS) or ()),
+            frozenset(options.get(CONF_EXCLUDE_DOMAINS) or ()),
+            frozenset(options.get(CONF_EXCLUDE_DEVICES) or ()),
         )
 
 
@@ -69,6 +76,10 @@ def is_shared(hass: HomeAssistant, entity_id: str, selection: Selection) -> bool
         return False
     if entity_id in selection.include:
         return True
+    if domain in selection.exclude_domains:
+        return False
+    if entry is not None and entry.device_id in selection.exclude_devices:
+        return False
     if domain not in selection.domains and (
         not selection.areas or entity_area(hass, entry) not in selection.areas
     ):

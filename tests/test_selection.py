@@ -174,3 +174,42 @@ async def test_area_and_domain_add_up(hass: HomeAssistant):
 
 def test_from_options_reads_areas():
     assert Selection.from_options({"areas": ["soggiorno"]}).areas == frozenset({"soggiorno"})
+
+
+def _device_of(hass: HomeAssistant, entity_id: str) -> str:
+    return er.async_get(hass).async_get(entity_id).device_id
+
+
+async def test_excluded_domain_leaves_area_and_domain(hass: HomeAssistant):
+    soggiorno, _ = _area_setup(hass)
+    sel = Selection(
+        frozenset({"switch"}), frozenset(), frozenset(), frozenset({soggiorno}),
+        exclude_domains=frozenset({"switch"}),
+    )
+    assert shared_entity_ids(hass, sel) == {"light.divano"}
+
+
+async def test_excluded_device_takes_all_its_entities_out(hass: HomeAssistant):
+    soggiorno, cucina = _area_setup(hass)
+    sel = Selection(
+        frozenset(), frozenset(), frozenset(), frozenset({soggiorno, cucina}),
+        exclude_devices=frozenset({_device_of(hass, "switch.presa")}),
+    )
+    # light.tavolo has its own area but still belongs to the excluded device
+    assert shared_entity_ids(hass, sel) == {"light.divano"}
+
+
+async def test_include_beats_excluded_domain_and_device(hass: HomeAssistant):
+    soggiorno, _ = _area_setup(hass)
+    sel = Selection(
+        frozenset(), frozenset({"switch.presa", "light.divano"}), frozenset(), frozenset({soggiorno}),
+        exclude_domains=frozenset({"light"}),
+        exclude_devices=frozenset({_device_of(hass, "switch.presa")}),
+    )
+    assert shared_entity_ids(hass, sel) == {"switch.presa", "light.divano"}
+
+
+def test_from_options_reads_exclusions():
+    sel = Selection.from_options({"exclude_domains": ["valve"], "exclude_devices": ["dev1"]})
+    assert sel.exclude_domains == frozenset({"valve"})
+    assert sel.exclude_devices == frozenset({"dev1"})

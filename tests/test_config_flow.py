@@ -180,3 +180,21 @@ async def test_options_flow_saves_areas(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options["areas"] == [area]
+
+
+async def test_options_flow_saves_exclusions(hass: HomeAssistant) -> None:
+    """Excluded domains and devices are counted and saved with the rest."""
+    hass.states.async_set("light.a", "on")
+    hass.states.async_set("valve.giardino", "closed")
+    entry = await _entry(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_DOMAINS: ["light", "valve"], "exclude_domains": ["valve"], "exclude_devices": []},
+    )
+    assert result["description_placeholders"]["count"] == "1"
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options["exclude_domains"] == ["valve"]
+    assert entry.options["exclude_devices"] == []

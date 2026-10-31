@@ -497,3 +497,24 @@ async def test_device_moved_into_shared_area_adds_its_entities(
     dr.async_get(hass).async_update_device(device.id, area_id=area)
     await hass.async_block_till_done()
     assert _events(gateway, "AddOrUpdateReport") == [[f"ha-{presa.id}"]]
+
+
+async def test_entity_moved_under_excluded_device_is_removed(
+    hass: HomeAssistant, hass_storage, token, gateway
+) -> None:
+    from homeassistant.helpers import device_registry as dr
+
+    _authorized(hass_storage)
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("test", "sonos")}
+    )
+    id_sala = _light(hass, "sala")
+    entry = _entry(hass, exclude_devices=[device.id])
+    await _setup(hass, entry)
+    assert _events(gateway, "AddOrUpdateReport") == [[id_sala]]
+
+    er.async_get(hass).async_update_entity("light.sala", device_id=device.id)
+    await hass.async_block_till_done()
+    assert _events(gateway, "DeleteReport") == [[id_sala]]

@@ -64,7 +64,8 @@ non vanno scritti nel repo né condivisi.
 
 1. **Prima** scegli in HA cosa condividere (*Alexa Bridge > Configura*): domini
    interi, aree intere (tutte le entità supportate dell'area, tranne le escluse)
-   o singole entità. Conferma il numero di entità.
+   o singole entità; togli domini o dispositivi interi con «Domini da
+   escludere» e «Dispositivi da escludere». Conferma il numero di entità.
 2. **Poi** collega la skill dall'app Alexa (abilita la skill in sviluppo, accedi
    con HA) e avvia la scoperta dei dispositivi.
 

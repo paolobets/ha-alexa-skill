@@ -16,6 +16,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     AreaSelector,
     AreaSelectorConfig,
+    DeviceSelector,
+    DeviceSelectorConfig,
     EntitySelector,
     EntitySelectorConfig,
     SelectSelector,
@@ -29,6 +31,8 @@ from .const import (
     CONF_AREAS,
     CONF_DOMAINS,
     CONF_ENDPOINT,
+    CONF_EXCLUDE_DEVICES,
+    CONF_EXCLUDE_DOMAINS,
     CONF_EXCLUDE_ENTITIES,
     CONF_INCLUDE_ENTITIES,
     CONF_LOCALE,
@@ -121,14 +125,17 @@ class AlexaBridgeOptionsFlow(OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Choose domains, areas and per-entity overrides."""
+        """Choose domains, areas, what to leave out and per-entity overrides."""
+        keys = (
+            CONF_DOMAINS,
+            CONF_AREAS,
+            CONF_EXCLUDE_DOMAINS,
+            CONF_EXCLUDE_DEVICES,
+            CONF_INCLUDE_ENTITIES,
+            CONF_EXCLUDE_ENTITIES,
+        )
         if user_input is not None:
-            self._proposed = {
-                CONF_DOMAINS: list(user_input.get(CONF_DOMAINS, [])),
-                CONF_AREAS: list(user_input.get(CONF_AREAS, [])),
-                CONF_INCLUDE_ENTITIES: list(user_input.get(CONF_INCLUDE_ENTITIES, [])),
-                CONF_EXCLUDE_ENTITIES: list(user_input.get(CONF_EXCLUDE_ENTITIES, [])),
-            }
+            self._proposed = {key: list(user_input.get(key, [])) for key in keys}
             return await self.async_step_confirm()
 
         current = self.config_entry.options
@@ -145,6 +152,19 @@ class AlexaBridgeOptionsFlow(OptionsFlow):
                 vol.Optional(
                     CONF_AREAS, default=list(current.get(CONF_AREAS, []))
                 ): AreaSelector(AreaSelectorConfig(multiple=True)),
+                vol.Optional(
+                    CONF_EXCLUDE_DOMAINS,
+                    default=list(current.get(CONF_EXCLUDE_DOMAINS, [])),
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=selectable_domains(),
+                        multiple=True,
+                    )
+                ),
+                vol.Optional(
+                    CONF_EXCLUDE_DEVICES,
+                    default=list(current.get(CONF_EXCLUDE_DEVICES, [])),
+                ): DeviceSelector(DeviceSelectorConfig(multiple=True)),
                 vol.Optional(
                     CONF_INCLUDE_ENTITIES,
                     default=list(current.get(CONF_INCLUDE_ENTITIES, [])),
