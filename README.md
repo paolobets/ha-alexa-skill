@@ -42,6 +42,20 @@ la CI la prova ogni settimana contro HA stabile e beta.
 
 Altre guide: [avviare un'automazione a voce](docs/script-gemelli.md).
 
+### Termostati
+
+Un termostato che **solo riscalda** (nessun modo raffrescamento, deumidifica o
+ventilazione) arriva ad Alexa senza acceso/spento e senza il modo «spento»:
+a voce si cambia la temperatura o si torna al programma («imposta il termostato
+su automatico»), ma «Alexa, spegni lo studio» spegne luci e prese della stanza e
+lascia il riscaldamento com'è. Amazon prevede acceso/spento per i
+condizionatori, non per i termostati, che restano sempre accesi; se Alexa
+manda comunque quei comandi, il bridge li rifiuta. I `climate` che raffreddano
+mantengono il comportamento standard di Home Assistant. Dopo l'aggiornamento
+dalla 0.3.x di' una volta «Alexa, cerca i dispositivi»: Alexa rilegge le
+funzioni dei termostati già condivisi e stanze e routine restano come sono.
+Fino ad allora il bridge rifiuta comunque acceso/spento e «spento».
+
 Se nel `configuration.yaml` c'è il blocco `alexa:` dell'integrazione standard,
 rimuovilo: HA lo segnala per evitare risposte doppie.
 

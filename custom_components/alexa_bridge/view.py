@@ -20,6 +20,7 @@ from .config import BridgeConfig
 from .const import DOMAIN, VIEW_URL
 from .ids import entity_id_from_alexa_id, legacy_alexa_id
 from .sync import ISSUE_NOT_AUTHORIZED, async_create_not_authorized_issue
+from .thermostat import rejected_directive
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -123,13 +124,16 @@ class BridgeSmartHomeView(HomeAssistantView):
         elif (header.get("namespace"), header.get("name")) == ACCEPT_GRANT:
             response = await _async_accept_grant(hass, config, message)
         else:
+            entity_id: str | None = None
             if isinstance(received_id, str):
                 # Unknown ids stay as received: the engine answers NO_SUCH_ENDPOINT.
                 if (entity_id := entity_id_from_alexa_id(hass, received_id)) is not None:
                     endpoint["endpointId"] = legacy_alexa_id(entity_id)
-            response = await async_handle_message(
-                hass, config, message, context=Context(user_id=user.id)
-            )
+            response = rejected_directive(hass, config, entity_id, message)
+            if response is None:
+                response = await async_handle_message(
+                    hass, config, message, context=Context(user_id=user.id)
+                )
 
         if response is None:
             return b""
